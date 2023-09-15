@@ -1,31 +1,13 @@
 <div class="px-6 py-16 xs:py-8">
     <h1 class="text-xl uppercase tracking-[15px] text-rp-subtle md:tracking-[20px]">Sign my guestbook</h1>
     <guestbook-element>
-        <form class="relative pt-8 max-w-[500px]">
-            <input aria-label="Your title" class="title pl-4 py-2 mb-2 pr-8 w-1/2 bg-rp-surface rounded-lg text-rp-text" placeholder="Your title..." type="text"/>
-            <input aria-label="Your message" class="message pl-4 py-2 pr-8 w-full bg-rp-surface rounded-lg text-rp-text" placeholder="Your message..." type="text"/>
-            <button class="absolute px-4 py-1 bottom-1 right-1 bg-rp-overlay rounded-lg" type="submit">Sign</button>
-        </form>
     </guestbook-element>
 </div>
 
 <script>
-    import { createClient } from "@supabase/supabase-js";
-    import type { Database } from "../database.types";
-    
-    const supabase = createClient<Database>(
-        "https://addcgxwkomotkbjjjoup.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkZGNneHdrb21vdGtiampqb3VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTQ0NzQ3MjAsImV4cCI6MjAxMDA1MDcyMH0.X8fYKPrrKTzggrNvSimVh-CHWodI7LXduO6YMx4FF94",
-        {
-            auth: {
-                persistSession: false
-            }
-        }
-    );
-    
     class Comment extends HTMLElement {
 
-        constructor () {
+        constructor() {
             super();
         }
 
@@ -44,6 +26,42 @@
 
     }
 
+    class SignIn extends HTMLElement {
+
+        constructor() {
+            super();
+        }
+
+        connectedCallback() {
+            const template = (document.getElementById("signin-template") as HTMLTemplateElement).cloneNode(true);
+            this.appendChild(template);
+            const google = this.querySelector(".google") as HTMLButtonElement;
+            const discord = this.querySelector(".discord") as HTMLButtonElement;
+
+            google.addEventListener("click", event => {
+                event.preventDefault();
+                globalThis.supabase.auth.signInWithOAuth({
+                    provider: "google"
+                })
+                    .then(_ => globalThis.supabase.auth.getSession())
+                    .then(response => {
+                        console.log(`DEBUG - Session: ${response.data.session}`)
+                    });
+            });
+
+            discord.addEventListener("click", event => {
+                event.preventDefault();
+                globalThis.supabase.auth.signInWithOAuth({
+                    provider: "google"
+                })
+                    .then(_ => globalThis.supabase.auth.getSession())
+                    .then(response => {
+                        console.log(`DEBUG - Session: ${response.data.session}`)
+                    });
+            });
+        }
+    }
+
     class GuestbookElement extends HTMLElement {
 
         constructor() {
@@ -51,20 +69,15 @@
         }
     
         connectedCallback() {
-            const btn = this.querySelector("button");
-            const title = this.querySelector(".title") as HTMLInputElement;
-            const message = this.querySelector(".message") as HTMLInputElement;
+            const submit = this.querySelector("button") as HTMLButtonElement;
 
-            btn?.addEventListener("click", event => {
-                event.preventDefault();
-                if (title !== null && message !== null) {
-                    supabase.from("comments").insert({ author: title.value, comment: message.value }).then(response => {
-                        console.log(response);
-                    });
+            globalThis.supabase.auth.getSession().then(response => {
+                if (response.data.session === null) {
+                    this.
                 }
             });
 
-            supabase.channel("any").on(
+            globalThis.supabase.channel("any").on(
                 "postgres_changes",
                 { event: "INSERT", schema: "public", table: "comments" },
                 payload => {
@@ -75,7 +88,7 @@
                 }
             ).subscribe();
 
-            supabase.from("comments").select().then((response) => {
+            globalThis.supabase.from("comments").select().then((response) => {
                 const comments = response.data;
                 if (comments !== null) {
                     for (const comment of comments) {
@@ -90,4 +103,5 @@
 
     customElements.define("guestbook-element", GuestbookElement);
     customElements.define("comment-element", Comment);
+    customElements.define("signin-element", SignIn);
 </script>
