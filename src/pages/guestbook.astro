@@ -1,0 +1,48 @@
+---
+import Head from  "../components/Head.astro";
+import Header from "../components/Header.astro";
+import Google from "../components/Google.astro";
+import GitHub from "../components/GitHub.astro";
+import GuestbookForm from "../components/GuestbookForm.astro";
+import GuestbookComments from "../components/GuestbookComments.astro";
+---
+<html lang="en">
+    <Head title="Guestbook | Chengxuan Li"/>
+	<body class="no-scrollbar scroll-smooth bg-rp-base text-rp-text antialiased">
+        <Header />
+        <main transition:animate="initial">
+            <section id="#guestbook">
+                <div class="px-6 py-16 xs:py-8">
+                    <h1 class="text-xl uppercase tracking-[15px] text-rp-subtle md:tracking-[20px]">Sign my guestbook</h1>
+                    <GuestbookForm />
+                    <GuestbookComments />
+                </div>
+            </section>
+        </main>
+    </body>
+    <template id="signin-form">
+        <div class="flex flex-col py-4 gap-2 max-w-fit align-middle content-center">
+            <button data-provider="google" class="px-4 py-1 bg-rp-overlay rounded-lg" type="submit">
+                Signin with <Google className="inline fill-rp-text ml-[2px] mb-[2px]" height="1rem"/>
+            </button>
+            <button data-provider="github" class="px-4 py-1 bg-rp-overlay rounded-lg" type="submit">
+                Signin with <GitHub className="inline fill-rp-text ml-[2px] mb-[2px]" height="1rem"/>
+            </button>
+        </div>
+    </template>
+    <template id="postsignin-form">
+        <form class="relative pt-8 max-w-[500px]">
+            <input aria-label="Your message" class="message pl-4 py-3 pr-8 w-full bg-rp-surface rounded-lg text-rp-text" placeholder="Your message..." type="text"/>
+            <button id="sign" class="absolute px-4 py-1 bg-rp-overlay rounded-lg right-2 top-10 hover:text-rp-iris" type="submit">Sign</button>
+            <button id="signout" class="mt-1 underline underline-offset-4 decoration-rp-pine hover:text-rp-pine" type="submit">Sign out</button>
+        </form>
+    </template>
+    <template id="comment-block">
+        <div class="flex flex-col gap-4 max-w-fit"></div>
+    </template>
+    <template id="comment">
+        <div class="w-full text-sm break-words">
+            <span class="text-rp-text mr-1"></span>
+        </div>
+    </template>
+</html>

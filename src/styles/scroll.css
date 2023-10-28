@@ -1,0 +1,17 @@
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+iframe::-webkit-scrollbar {
+    display: none;
+}
+
+iframe {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

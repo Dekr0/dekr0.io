@@ -1,0 +1,75 @@
+---
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "../database.types";
+
+// Prefetch comments in server side
+const supabase = createClient<Database>(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_KEY,
+    {
+        auth: {
+            persistSession: false
+        }
+    }
+);
+
+const { data, error } = await supabase
+    .from("comments")
+    .select()
+    .order("comment_at", { ascending: false });
+
+if (error !== null) console.error(error);
+---
+<div class="flex flex-col gap-4 max-w-fit">
+    {data?.map((comment) => (
+        <div data-created={comment.comment_at} class="w-full text-sm break-words">
+            <span class="text-rp-text mr-1">{comment.author}: {comment.comment}</span>
+        </div>
+    ))}
+</div>
+<script>
+    import { createClient, type RealtimePostgresDeletePayload, type RealtimePostgresInsertPayload } from "@supabase/supabase-js";
+    import type { Database } from "../database.types";
+
+    const form = document.querySelector("form-element") as HTMLElement;
+    const commentTem = document.getElementById("comment") as HTMLTemplateElement;
+    
+    // Prevent duplicate supabase client
+    if (window.supabase === null || window.supabase === undefined) {
+        window.supabase = createClient<Database>(
+            import.meta.env.PUBLIC_SUPABASE_URL,
+            import.meta.env.PUBLIC_SUPABASE_KEY,
+            {
+                auth: {
+                    persistSession: true,
+                    // Ignore storage option since it's not server side
+                }
+            }
+        );
+
+        console.log("supabase client is created");
+    }
+
+    function onNewComments(payload: RealtimePostgresInsertPayload<{[key: string]: any;}>) {
+        const newComment = payload.new;
+
+        const newCommentElement = commentTem.content.cloneNode(true) as HTMLElement;
+        const span = newCommentElement.querySelector("span") as HTMLElement;
+        span.textContent = `${newComment.author}: ${newComment.comment}`
+
+        form.nextElementSibling?.insertAdjacentElement("afterbegin", newCommentElement);
+    }
+
+    function onDeleteComments(payload: RealtimePostgresDeletePayload<{[key: string]: any;}>) {
+        const deletedComment = payload.old;
+        console.log(deletedComment);
+    }
+
+    if (window.supabase !== null && window.supabase !== undefined) {
+        window.supabase
+          .channel('any')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'countries' }, onNewComments)
+          .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'countries' }, onDeleteComments)
+          .subscribe();
+    }
+</script>

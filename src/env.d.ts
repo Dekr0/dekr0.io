@@ -1,1 +1,16 @@
 /// <reference types="astro/client" />
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
+
+export interface Window {
+    supabase: SupabaseClient<Database> | null;
+}
+
+interface ImportMetaEnv {
+    readonly PUBLIC_SUPABASE_URL: string;
+    readonly PUBLIC_SUPABASE_KEY: string;
+}
+
+interface ImportMeta {
+    readonly env: ImportMetaEnv;
+}

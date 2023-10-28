@@ -1,0 +1,124 @@
+<form-element></form-element>
+<script>
+    import { createClient } from "@supabase/supabase-js";
+    import type { Database } from "../database.types";
+    import type { Provider } from "@supabase/supabase-js";
+
+    // Prevent duplicate supabase client
+    if (window.supabase === null || window.supabase === undefined) {
+        window.supabase = createClient<Database>(
+            import.meta.env.PUBLIC_SUPABASE_URL,
+            import.meta.env.PUBLIC_SUPABASE_KEY,
+            {
+                auth: {
+                    persistSession: true,
+                    // Ignore storage option since it's not server side
+                }
+            }
+        );
+
+        console.log("supabase client is created");
+    }
+
+    function getURL() {
+        const host = window.location.host;
+    
+        return `${host.startsWith("localhost") ? "http" : "https"}://${host}`;
+    }
+    
+    function postComments(comment: string) {
+    }
+
+    const signinTem = document.getElementById("signin-form") as HTMLTemplateElement;
+    const postsigninTem = document.getElementById("postsignin-form") as HTMLTemplateElement;
+
+    class Form extends HTMLElement {
+
+        constructor() {
+            super();
+        }
+
+        async auth() {
+            if (window.supabase !== null && window.supabase !== undefined) {
+                const { data, error } = await window.supabase.auth.getSession();
+                if (error) {
+                    throw error;
+                }
+
+                if (data.session !== null) {
+                    this.renderPostSignIn();
+                } else {
+                    this.renderSignIn();
+                }
+            } else {
+                // Error Page
+            }
+        }
+
+        connectedCallback() {
+            this.auth();
+
+            window.supabase?.auth.onAuthStateChange((event, session) => {
+                if (event === "SIGNED_OUT") {
+                    this.renderSignIn();
+                }
+            });
+        }
+
+        renderSignIn() {
+            this.innerHTML = "";
+            const tem = signinTem.content.cloneNode(true);
+
+            this.appendChild(tem);
+
+            const options = this.querySelectorAll("button");
+
+            options.forEach(option => {
+                const provider = option.dataset.provider as Provider;
+                option.addEventListener("click", event => {
+                    event.preventDefault();
+
+                    window.supabase?.auth.signInWithOAuth({
+                        provider: provider,
+                        options: {
+                            redirectTo: `${getURL()}/guestbook` 
+                        }
+                    });
+                });
+            })
+        }
+
+        renderPostSignIn() {
+            this.innerHTML = "";
+
+            const tem = postsigninTem.content.cloneNode(true);
+            this.appendChild(tem);
+
+            const sign = this.querySelector("#sign") as HTMLElement;
+            const signout = this.querySelector("#signout") as HTMLElement;
+
+            sign.addEventListener("click", event => {
+                event.preventDefault();
+                const input = this.querySelector("input") as HTMLInputElement;
+            });
+
+            signout.addEventListener("click", event => {
+                event.preventDefault();
+                if (window.supabase !== null && window.supabase !== undefined) {
+                    window.supabase.auth.signOut()
+                        .then(r => {
+                            if (r.error !== null) {
+                                console.error(r.error);
+                                // Error Page?
+                            }
+
+                            this.innerHTML = "";
+                            this.renderSignIn();
+                        });
+                }
+            });
+        }
+    }
+
+    customElements.define("form-element", Form);
+</script>
